@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:14.5
+    environment:
+      - POSTGRES_PASSWORD=qawsed
+    volumes:
+      - ./postgres-db:/var/lib/postgresql/data
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3050:80"
+  api:
+    build:
+      context: "./api"
+      dockerfile: Dockerfile
+    volumes:
+      - /app/node_modules
+      - ./api:/app
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=qawsed
+      - PGPORT=5432
+    depends_on:
+      - postgres
+  client:
+    stdin_open: true
+    build:
+      context: "./client"
+      dockerfile: Dockerfile
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+    depends_on:
+      - api
